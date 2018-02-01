@@ -4,6 +4,10 @@
 object App {
 
   def main(args: Array[String]): Unit = {
-    println("Hello World!")
+    val time = "20180130-152448"
+    val timeSplit = time.split("-")
+    val timeSection = (timeSplit(1).charAt(0).toString + timeSplit(1).charAt(1).toString).toInt
+    println(timeSection)
+
   }
 }
