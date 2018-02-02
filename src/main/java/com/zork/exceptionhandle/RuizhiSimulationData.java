@@ -41,7 +41,7 @@ public class RuizhiSimulationData {
 
             normalFields.put("RecordNum", "1")
                     .put("SessionID", "1")
-                    .put("AccountID", "259191")
+                    .put("AccountID", "25919" + random.nextInt(9))
                     .put("ThreadID", "00002590")
                     .put("BusinessID", "1770584")
                     .put("TradTime", "")
@@ -62,9 +62,9 @@ public class RuizhiSimulationData {
 
             dimensions.put("logdate", "20180131")
                     .put("appprogramname", "ruizhi")
-                    .put("hostname", "wsjy-tdxrz15")
+                    .put("hostname", "wsjy-tdxrz1" + random.nextInt(10))
                     .put("appsystem", "ruizhiSystem")
-                    .put("IPMac", "117.24.114.163/18F46AB7B768"); //
+                    .put("IPMac", "117.24.114.16"+random.nextInt(9)+"//18F46AB7B768");
 
             _source.put("timestamp","2018-01-31T23:57:23.000+08:00")
                     .put("source","D:\\tdx\\tdxtc50_7708\\log\\Trade_20180201.log")

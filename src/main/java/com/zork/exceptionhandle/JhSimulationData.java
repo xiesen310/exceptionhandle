@@ -39,8 +39,9 @@ public class JhSimulationData {
         try {
             measures.put("latence", random.nextInt(10));
 
-            normalFields.put("result", "1")
-                    .put("ldate", "c.c")
+            normalFields.put("custId","212122"+ random.nextInt(9))
+                    .put("result", "1")
+                    .put("ldate", "20180131")
                     .put("interval", "0")
                     .put("bz", "")
                     .put("baklogflag", "0")
