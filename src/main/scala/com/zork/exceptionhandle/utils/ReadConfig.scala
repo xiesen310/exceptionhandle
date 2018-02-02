@@ -20,7 +20,6 @@ object ReadConfig {
                    , threshold: Long // 阈值
                   )
 
-
   /**
     * 获取配置信息
     *

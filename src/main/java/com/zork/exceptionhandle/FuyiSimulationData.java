@@ -1,10 +1,8 @@
 package com.zork.exceptionhandle;
-
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
-
 import java.util.Properties;
 import java.util.Random;
 
@@ -39,17 +37,17 @@ public class FuyiSimulationData {
         try {
             measures.put("latence", random.nextInt(10));
 
-            normalFields.put("custId", "12067449")
+            normalFields.put("custId", "1206744" + random.nextInt(9))
                     .put("message", "")
                     .put("funcId", "410312")
                     .put("createTime", "20180131 23:57:23")
                     .put("logchecktime", "2018-01-31T23:57:38.974+08:00")
                     .put("macAddr", "7824AF37301C")
-                    .put("lanIp", "117.135.212.39") //
+                    .put("lanIp", "117.135.212.3" + random.nextInt(9)) // 内网IP
                     .put("isSuccess", "0")
                     .put("userTime", "14")
                     .put("ext", "")
-                    .put("walIp", "FY10.232.238.82") //
+                    .put("walIp", "FY10.232.238.8" + random.nextInt(9)) //外网IP
                     .put("oraId", "5201");
 
             dimensions.put("logdate", "20180131")
@@ -68,7 +66,6 @@ public class FuyiSimulationData {
 
             JSONArray indexTime = new JSONArray();
             indexTime.put(1517414258978L);
-
             JSONArray normalFieldsLogchecktime = new JSONArray();
             normalFieldsLogchecktime.put(1517414258974L);
 
@@ -98,7 +95,7 @@ public class FuyiSimulationData {
         try {
             while (true) {
                 client.sendRecorder("test1", "key", message());
-                Thread.sleep(1000);
+                Thread.sleep(500);
             }
         } catch (Exception e) {
             e.printStackTrace();
