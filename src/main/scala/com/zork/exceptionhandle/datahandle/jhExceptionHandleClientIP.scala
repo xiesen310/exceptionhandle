@@ -108,3 +108,5 @@ object jhExceptionHandleClientIP {
     ssc.awaitTermination()
   }
 }
+/*
+http://210.22.155.10:8888/FandyLau/gt_Trade_Analyze_Spark.git*/

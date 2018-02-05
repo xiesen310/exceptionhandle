@@ -17,7 +17,7 @@ public class JhSimulationData {
 
     public JhSimulationData() {
         properties = new Properties();
-        properties.put("bootstrap.servers", "master:9092,slaver1:9092");
+        properties.put("bootstrap.servers", "zorkdata-2:9092,zorkdata-3:9092");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         producer = new KafkaProducer<>(properties);
@@ -115,7 +115,7 @@ public class JhSimulationData {
 
         try {
             while (true) {
-                client.sendRecorder("test1", "key", message());
+                client.sendRecorder("test", "key", message());
                 Thread.sleep(1000);
             }
         } catch (Exception e) {
@@ -123,7 +123,7 @@ public class JhSimulationData {
         }
 
         /*for (int i = 0; i < 10; i++) {
-            client.sendRecorder("test1", "key" + i, message());
+            client.sendRecorder("test", "key" + i, message());
         }*/
     }
 }
