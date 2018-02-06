@@ -1,10 +1,13 @@
 package com.zork.exceptionhandle;
 
+import com.zork.exceptionhandle.es.WriteData2Es;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 import java.util.Random;
 
@@ -75,7 +78,17 @@ public class JhSimulationData {
                     .put("appsystem", "JHSystem")
                     .put("func", "aa");
 
-            _source.put("timestamp","2018-01-31T23:57:23.000+08:00")
+     /*       _source.put("timestamp","2018-01-31T23:57:23.000+08:00")
+                    .put("source","")
+                    .put("indexTime","2018-01-31T23:57:38.978+08:00")
+                    .put("normalFields",normalFields)
+                    .put("logTypeName","yiyangzhi_kafka_logstash")
+                    .put("dimensions",dimensions)
+                    .put("measures",measures)
+                    .put("offset", "0");
+*/
+
+            event.put("timestamp", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date())+".000+08:00")
                     .put("source","")
                     .put("indexTime","2018-01-31T23:57:38.978+08:00")
                     .put("normalFields",normalFields)
@@ -96,14 +109,15 @@ public class JhSimulationData {
                     .put("normalFields.logchecktime", normalFieldsLogchecktime)
                     .put("timestamp", timestamp);
 
-            event.put("_index", "fuyilog_2018.01.31")
-                    .put("_type", "kcbp_biz_log")
-                    .put("_id", "AWFM8Cw7OxRgjvauX-ga")
-                    .put("_version", 1)
-                    .put("_score", "null")
-                    .put("sort", 1517414243000L)
-                    .put("fields", fields)
-                    .put("_source", _source);
+//            event
+//                    .put("_index", "fuyilog_2018.01.31")
+//                    .put("_type", "kcbp_biz_log")
+//                    .put("_id", "AWFM8Cw7OxRgjvauX-ga")
+//                    .put("_version", 1)
+//                    .put("_score", "null")
+//                    .put("sort", 1517414243000L)
+//                    .put("fields", fields)
+//                    .put("_source", _source);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -116,6 +130,7 @@ public class JhSimulationData {
         try {
             while (true) {
                 client.sendRecorder("test", "key", message());
+                WriteData2Es.write(message());
                 Thread.sleep(1000);
             }
         } catch (Exception e) {
