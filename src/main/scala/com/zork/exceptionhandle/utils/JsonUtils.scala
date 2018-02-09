@@ -1,4 +1,5 @@
 package com.zork.exceptionhandle.utils
+
 import com.alibaba.fastjson.JSON
 import scala.collection.mutable
 

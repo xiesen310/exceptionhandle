@@ -3,6 +3,8 @@ package com.zork.exceptionhandle.datahandle
 import java.util
 
 import com.alibaba.fastjson.JSON
+import com.zork.exceptionhandle.restful.SendMessage
+import com.zork.exceptionhandle.restful.SendMessage.Message
 import com.zork.exceptionhandle.utils.{ReadConfig, RedisUtil}
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
@@ -20,6 +22,7 @@ import scala.collection.mutable
 object RuizhiExceptionHandleServerIP {
 
   val eConf = ReadConfig.getConf()
+  val threshold = ReadConfig.getFrequency()
 
   val redisHost: String = eConf.redisHost
   val redisPort: Int = eConf.redisPort
@@ -27,11 +30,13 @@ object RuizhiExceptionHandleServerIP {
   val topicTopo: mutable.MutableList[String] = eConf.kafkaTopics
   val groupId: String = eConf.kafkaGroupId
   val batchDuration: Int = eConf.batchDuration
-  val threshold: Long = eConf.threshold
+//  val threshold: Long = eConf.threshold
   val url: String = eConf.url
+  val appName = this.getClass.getSimpleName
+  val cip = threshold.sip
 
   // 设置spark streaming 配置参数
-  val conf = new SparkConf().setAppName("jhExceptionHandleClientIP").setMaster("local[*]")
+  val conf = new SparkConf().setAppName(appName).setMaster("local[*]")
   val ssc = new StreamingContext(conf, Seconds(batchDuration));
 
   def change(x: (String, (String, Long)), y: (String, (String, Long))): (String, (String, Long)) = {
@@ -70,13 +75,13 @@ object RuizhiExceptionHandleServerIP {
       while (itr.hasNext) {
         // 获取json字符串中normalFields的数据
         val json = JSON.parseObject(itr.next())
-        val source = json.get("_source").toString
+        val source = json.get("normalFields").toString
 
-        val normalFields = JSON.parseObject(source).get("normalFields").toString
-        val dimensions = JSON.parseObject(source).get("dimensions").toString
+//        val normalFields = JSON.parseObject(source).get("normalFields").toString
+        val dimensions = json.get("dimensions").toString
 
         // 解析normalFields 中的json数据
-        val json1 = JSON.parseObject(normalFields)
+        val json1 = JSON.parseObject(source)
         val json2 = JSON.parseObject(dimensions)
         // createTime: 时间；lanIp：内网IP；walIp: 外网IP
         val createTime = json2.get("logdate").toString
@@ -93,6 +98,8 @@ object RuizhiExceptionHandleServerIP {
       x.foreach(x => {
         val split = x._1.split("__")
         val cid = split(1)
+        val time = split(0)
+        val key = time + "-" + cid
         val count = x._2._2
         map.put("time", split(0))
         map.put("ip", x._2._1)
@@ -100,8 +107,9 @@ object RuizhiExceptionHandleServerIP {
         // 获取redis对象
         val jedis = RedisUtil.pool.getResource
         jedis.select(8)
-//        if (count > 5) {
-          jedis.hmset(cid, map)
+//        if (count > cip) {
+//        SendMessage.send(url + "?cusId=" + cid + "&time=" + time, new Message(cid, count.toString))
+          jedis.hmset(key, map)
 //        }
         RedisUtil.pool.returnResource(jedis)
       })

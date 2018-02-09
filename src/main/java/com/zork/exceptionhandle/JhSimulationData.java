@@ -44,7 +44,7 @@ public class JhSimulationData {
 
             normalFields.put("custId","212122"+ random.nextInt(9))
                     .put("result", "1")
-                    .put("ldate", "20180131")
+                    .put("ldate", new SimpleDateFormat("yyyyMMdd").format(new Date()))
                     .put("interval", "0")
                     .put("bz", "")
                     .put("baklogflag", "0")
@@ -68,7 +68,7 @@ public class JhSimulationData {
                     .put("ip", "36.149.29.8" + random.nextInt(9)) //
                     .put("synid", "251121")
                     .put("message", "synid: 251121")
-                    .put("logchecktime", "2018-01-31T23:59:59.948+08:00")
+                    .put("logchecktime", new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date()) + ".948+08:00")
                     .put("gnname", "FY10")
                     .put("gpdm", "");
 
@@ -76,7 +76,7 @@ public class JhSimulationData {
                     .put("hostname", "10.228.196.15" + random.nextInt(9))
                     .put("result", "1")
                     .put("appsystem", "JHSystem")
-                    .put("func", "aa");
+                    .put("func", "41031" + random.nextInt(3));
 
      /*       _source.put("timestamp","2018-01-31T23:57:23.000+08:00")
                     .put("source","")
@@ -87,7 +87,6 @@ public class JhSimulationData {
                     .put("measures",measures)
                     .put("offset", "0");
 */
-
             event.put("timestamp", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date())+".000+08:00")
                     .put("source","")
                     .put("indexTime","2018-01-31T23:57:38.978+08:00")
@@ -130,8 +129,9 @@ public class JhSimulationData {
         try {
             while (true) {
                 client.sendRecorder("test", "key", message());
-                WriteData2Es.write(message());
-                Thread.sleep(1000);
+                // 写入数据到
+//                WriteData2Es.write(message());
+                Thread.sleep(50);
             }
         } catch (Exception e) {
             e.printStackTrace();

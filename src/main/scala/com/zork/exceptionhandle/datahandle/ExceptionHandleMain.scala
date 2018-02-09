@@ -95,9 +95,9 @@ object ExceptionHandleMain {
         val timeSection = (timeSplit(1).charAt(0).toString + timeSplit(1).charAt(1).toString).toInt
 
         // 异常交易时间段
-        if(timeSection > 15 && timeSection < 20) {
+//        if(timeSection > 15 && timeSection < 20) {
           jedis.set(cid, count.toString)
-        }
+//        }
 
         // 高频交易
 //        if (count > threshold) {

@@ -3,8 +3,6 @@ package com.zork.exceptionhandle.datahandle
 import java.util
 
 import com.alibaba.fastjson.JSON
-import com.zork.exceptionhandle.restful.SendMessage
-import com.zork.exceptionhandle.restful.SendMessage.Message
 import com.zork.exceptionhandle.utils.{ReadConfig, RedisUtil}
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
@@ -19,35 +17,31 @@ import scala.collection.mutable
   *
   * @author 谢森
   */
-object jhExceptionHandleClientIP {
-
+object FuyiExceptionHandleRps {
   val eConf = ReadConfig.getConf()
-  val threshold = ReadConfig.getFrequency()
 
+  val threshold = ReadConfig.getFrequency()
   val redisHost: String = eConf.redisHost
   val redisPort: Int = eConf.redisPort
   val bootstrap: String = eConf.bootstrapServers
   val topicTopo: mutable.MutableList[String] = eConf.kafkaTopics
   val groupId: String = eConf.kafkaGroupId
   val batchDuration: Int = eConf.batchDuration
-  //  val threshold: Long = eConf.threshold
+  val rps = threshold.rps
   val url: String = eConf.url
   val appName = this.getClass.getSimpleName
-  val cip = threshold.cip
 
   // 设置spark streaming 配置参数
   val conf = new SparkConf().setAppName(appName).setMaster("local[*]")
   val ssc = new StreamingContext(conf, Seconds(batchDuration));
 
-  def change(x: (String, (String, Long)), y: (String, (String, Long))): (String, (String, Long)) = {
-    x._1 match {
-      case y._1 => {
-        val temp = y._2._1 + "," + x._2._1
-        val tempArr = temp.split(",").distinct
-        (y._1, (tempArr.mkString(","), tempArr.length))
-      }
-      case _ => x
-    }
+  def change2(x: (String, Long, Long, Long), y: (String, Long, Long, Long)): (String, Long, Long, Long) = {
+    val funcId = x._1.split("__")(1)
+    var lc: Long = 0L
+    if (funcId == "410311") lc = x._3 + y._3
+    var qc: Long = 0L
+    if (funcId == "410312") qc = x._4 + y._4
+    (x._1, x._2 + y._2, lc, qc)
   }
 
   def main(args: Array[String]): Unit = {
@@ -58,8 +52,6 @@ object jhExceptionHandleClientIP {
       , "value.deserializer" -> "org.apache.kafka.common.serialization.StringDeserializer"
       , "group.id" -> groupId
     )
-    // 订阅topic
-    //    val topics = Array("test1")
     val stream = KafkaUtils.createDirectStream[String, String](
       ssc,
       PreferConsistent,
@@ -71,45 +63,45 @@ object jhExceptionHandleClientIP {
     RedisUtil.init(redisHost, redisPort)
 
     val partitionSet = message.mapPartitions(itr => {
-      val flowList = new scala.collection.mutable.ListBuffer[(String, (String, Long))]
+      val flowList = new scala.collection.mutable.ListBuffer[(String, (String, Long, Long, Long))]
       while (itr.hasNext) {
         // 获取json字符串中normalFields的数据
         val json = JSON.parseObject(itr.next())
-        val normalFields = json.get("normalFields").toString
-
-        // 解析normalFields 中的json数据
-        val json1 = JSON.parseObject(normalFields)
-        // createTime: 时间；lanIp：内网IP；walIp: 外网IP
-        val createTime = json1.get("ldate").toString
-        val lanIp: String = json1.get("ip").toString
-        val walIp: String = json1.get("hostname").toString
-        val custId = json1.get("custId")
-        // 获取维度的值
-        val key: String = createTime + "__" + custId
-        flowList.+=((key, (lanIp, 1L)))
+        val source = json.get("normalFields").toString
+        val json1 = JSON.parseObject(source)
+        val createTime = json1.get("createTime").toString.split(" ")(0) + json1.get("createTime").toString.split(" ")(1).split(":")(0) + json1.get("createTime").toString.split(" ")(1).split(":")(0)
+        val funcId = json1.get("funcId").toString
+        val custId = json1.get("custId").toString
+        val tmp: String = createTime + "__" + funcId
+        flowList.+=((custId, (tmp, 1L, 1L, 1L)))
       }
       flowList.iterator
-    }).reduce(change).foreachRDD(x => {
+    }).reduceByKey(change2).foreachRDD(x => {
       val map = new util.HashMap[String, String]
       x.foreach(x => {
-        val split = x._1.split("__")
-        val cid = split(1)
-        val time = split(0)
-        val count = x._2._2
-        val key = time + "-" + cid
-        map.put("time", split(0))
-        map.put("ip", x._2._1)
-        map.put("count", count.toString)
         // 获取redis对象
         val jedis = RedisUtil.pool.getResource
-        jedis.select(5)
-        //        if (count > cip) {
-        //        SendMessage.send(url + "?cusId=" + cid + "&time=" + time, new Message(cid, count.toString))
-        jedis.hmset(key, map)
-        //        }
+        jedis.select(10)
+        val custId = x._1
+        val split = x._2._1.split("__")
+        val time = split(0)
+        val pv = x._2._2
+        val lc = x._2._3
+        val qc = x._2._4
+
+        val key = time + "-" + custId
+        map.put("pv", pv.toString)
+        map.put("lc", lc.toString)
+        map.put("qc", qc.toString)
+        map.put("time", time)
+        map.put("custId", custId)
+        if(pv > rps || lc > rps || qc > rps) {
+          jedis.hmset(key, map)
+        }
         RedisUtil.pool.returnResource(jedis)
       })
     })
+
     ssc.start()
     ssc.awaitTermination()
   }

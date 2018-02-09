@@ -4,7 +4,7 @@ import java.util
 
 import com.alibaba.fastjson.JSON
 import com.zork.exceptionhandle.utils.{ReadConfig, RedisUtil}
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.{SparkConf}
 import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
 import org.apache.spark.streaming.kafka010.KafkaUtils
 import org.apache.spark.streaming.kafka010.LocationStrategies.PreferConsistent
@@ -18,8 +18,10 @@ import scala.collection.mutable
   * @author 谢森
   */
 object FuyiExceptionHandleServerIP {
+  val appName = this.getClass.getSimpleName
 
   val eConf = ReadConfig.getConf()
+  val threshold = ReadConfig.getFrequency()
 
   val redisHost: String = eConf.redisHost
   val redisPort: Int = eConf.redisPort
@@ -27,11 +29,11 @@ object FuyiExceptionHandleServerIP {
   val topicTopo: mutable.MutableList[String] = eConf.kafkaTopics
   val groupId: String = eConf.kafkaGroupId
   val batchDuration: Int = eConf.batchDuration
-  val threshold: Long = eConf.threshold
   val url: String = eConf.url
+  val sip = threshold.sip
 
   // 设置spark streaming 配置参数
-  val conf = new SparkConf().setAppName("ExceptionHandleMain").setMaster("local[*]")
+  val conf = new SparkConf().setAppName(appName).setMaster("local[*]")
   val ssc = new StreamingContext(conf, Seconds(batchDuration));
 
   def change(x: (String, (String, Long)), y: (String, (String, Long))): (String, (String, Long)) = {
@@ -53,8 +55,6 @@ object FuyiExceptionHandleServerIP {
       , "value.deserializer" -> "org.apache.kafka.common.serialization.StringDeserializer"
       , "group.id" -> groupId
     )
-    // 订阅topic
-    //    val topics = Array("test1")
     val stream = KafkaUtils.createDirectStream[String, String](
       ssc,
       PreferConsistent,
@@ -70,18 +70,13 @@ object FuyiExceptionHandleServerIP {
       while (itr.hasNext) {
         // 获取json字符串中normalFields的数据
         val json = JSON.parseObject(itr.next())
-        val source = json.get("_source").toString
-
-        val normalFields = JSON.parseObject(source).get("normalFields").toString
+        val source = json.get("normalFields").toString
 
         // 解析normalFields 中的json数据
-        val json1 = JSON.parseObject(normalFields)
-        // createTime: 时间；lanIp：内网IP；walIp: 外网IP
+        val json1 = JSON.parseObject(source)
         val createTime = json1.get("createTime").toString.split(" ")(0)
         val lanIp: String = json1.get("lanIp").toString
-        // val walIp = json1.get("walIp")
         val custId = json1.get("custId")
-        // 获取维度的值
         val key: String = createTime + "__" + custId
         flowList.+=((key, (lanIp, 1L)))
       }
@@ -91,7 +86,9 @@ object FuyiExceptionHandleServerIP {
       x.foreach(x => {
         val split = x._1.split("__")
         val cid = split(1)
+        val time = split(0)
         val count = x._2._2
+        val key = time + "-" + cid
         map.put("time", split(0))
         map.put("ip", x._2._1)
         map.put("count", count.toString)
@@ -99,8 +96,9 @@ object FuyiExceptionHandleServerIP {
         // 获取redis对象
         val jedis = RedisUtil.pool.getResource
         jedis.select(3)
-        //        if(count > 5){
-        jedis.hmset(cid, map)
+        //        if(count > sip){
+//        SendMessage.send(url + "?cusId=" + cid + "&time=" + time, new Message(cid, count.toString))
+        jedis.hmset(key, map)
         //        }
         RedisUtil.pool.returnResource(jedis)
       })

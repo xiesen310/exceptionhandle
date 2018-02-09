@@ -5,6 +5,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 
 import org.codehaus.jettison.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 import java.util.Random;
 
@@ -17,7 +19,7 @@ public class KcbpSimulationData {
 
     public KcbpSimulationData() {
         properties = new Properties();
-        properties.put("bootstrap.servers", "master:9092,slaver1:9092");
+        properties.put("bootstrap.servers", "zorkdata-2:9092,zorkdata-3:9092");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         producer = new KafkaProducer<>(properties);
@@ -49,7 +51,7 @@ public class KcbpSimulationData {
                     .put("message", "20180130-152448 Req: NodeId=2008, QueueId=96, MsgId=10000001025D41631E49ADC0, Len=390, Buf=01200000000000000000100000000000000090E2BA930B19KCXP00  GV2gODkBbGg=                          150555  00264000000          076_CA=2.3&_ENDIAN=0&hqtype=TRDSES04_MD402&jsonstr=[{\\\"F_OP_USER\\\":\\\"9999\\\",\\\"F_OP_ROLE\\\":\\\"2\\\",\\\"F_SESSION\\\":\\\"\\\",\\\"F_OP_SITE\\\":\\\"0010a4c6199f\\\",\\\"F_OP_BRANCH\\\":\\\"999\\\",\\\"F_CHANNEL\\\":\\\"0\\\",\\\"NewType\\\":\\\"TRDSES04_MD402\\\",\\\"AmountStatus\\\":\\\"2\\\",\\\"PosAmt\\\":\\\"8569252323\\\",\\\"ThresholdAmount\\\":\\\"10500000000\\\"}]  Ans: NodeId=2008, QueueId=96, MsgId=10000001025D41631E49ADC0, Len=260, Buf=01300000000000000000302008020080200890E2BA930B19KCXP00  GV2gODkBbGg=5A701DC0002008000000016389150555  00134000000          076_CA=2.3&_SYSID=2008&_ENDIAN=0&_RS_1=MESSAGE;3;LEVEL,CODE,MSG;1&_1=0,0,沪港通额度信息及实时状态刷新成功!&_EORS_1=1&_RC=1&_CC=3&_TL=3:1")
                     .put("operway", "")
                     .put("versioninfo", "")
-                    .put("beg_logtime", "20180130-"+(random.nextInt(14)+10)+"244" + random.nextInt(3))
+                    .put("beg_logtime", new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()))
                     .put("logchecktime", "2018-01-30T15:24:53.753+08:00")
                     .put("orgid", "")
                     .put("authcode", "")
@@ -85,15 +87,11 @@ public class KcbpSimulationData {
 
         try {
             while (true) {
-                client.sendRecorder("test1", "key", message());
-                Thread.sleep(1000);
+                client.sendRecorder("test", "key", message());
+                Thread.sleep(500);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        /*for (int i = 0; i < 10; i++) {
-            client.sendRecorder("test1", "key" + i, message());
-        }*/
     }
 }

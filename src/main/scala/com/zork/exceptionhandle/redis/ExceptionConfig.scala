@@ -26,9 +26,15 @@ object ExceptionConfig {
     value.put("zookeeper.servers", "zorkdata-1:2181,zorkdata-2:2181,zorkdata-3:2181")
     value.put("bootstrap.servers", "zorkdata-1:9092,zorkdata-2:9092,zorkdata-3:9092")
     value.put("url", "http://192.168.30.31:8080/tradeanalyze/queryExeception/customerOccursExcepetion.do")
-    value.put("batchDuration", "10")
-    value.put("threshold", "20")
+    value.put("batchDuration", "30")
+    value.put("highHrequency", "20")
 
+    value.put("cip","5")
+    value.put("sip","5")
+
+    value.put("rps","50")
+    value.put("jhSip","5")
+    value.put("timeslot","15-20")
     jedis.hmset(key, value)
     RedisUtil.pool.returnResource(jedis)
   }

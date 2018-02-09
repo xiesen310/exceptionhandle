@@ -26,7 +26,10 @@ object App {
     println("format数组： "  + format)*/
 
 
-    val str = "12345"
-    println(str.substring(2))
+    /*val str = "12345"
+    println(str.substring(2))*/
+
+
+
   }
 }

@@ -5,6 +5,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 import java.util.Random;
 
@@ -17,7 +19,7 @@ public class RuizhiSimulationData {
 
     public RuizhiSimulationData() {
         properties = new Properties();
-        properties.put("bootstrap.servers", "master:9092,slaver1:9092");
+        properties.put("bootstrap.servers", "zorkdata-2:9092,zorkdata-3:9092");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         producer = new KafkaProducer<>(properties);
@@ -38,7 +40,6 @@ public class RuizhiSimulationData {
         Random random = new Random();
         try {
             measures.put("latence", random.nextInt(10));
-
             normalFields.put("RecordNum", "1")
                     .put("SessionID", "1")
                     .put("AccountID", "25919" + random.nextInt(9))
@@ -50,30 +51,32 @@ public class RuizhiSimulationData {
                     .put("TradeDateTime", "2018-01-31/23:59:59:999")
                     .put("TypeName", "Send")
                     .put("ConnectID", "4299")
-                    .put("FuncID", "1108")
+                    .put("FuncID", "41031" + random.nextInt(3))
                     .put("TradeState", "1")
                     .put("message", "01-31/23:59:59:999[00002590][117.24.114.163/")
                     .put("FiledValue", "")
-                    .put("logchecktime", "2018-02-01T00:00:03.283+08:00")
+                    .put("logchecktime", new SimpleDateFormat("yyyyMMdd'T'HH:mm:ss").format(new Date()) + ".283+08:00")
                     .put("timeError", "")
                     .put("kvFiled", "{ext}")
                     .put("FiledName", "")
                     .put("BodyLength", "00000231");
 
-            dimensions.put("logdate", "20180131")
+            dimensions.put("logdate", new SimpleDateFormat("yyyyMMdd").format(new Date()))
                     .put("appprogramname", "ruizhi")
                     .put("hostname", "wsjy-tdxrz1" + random.nextInt(10))
                     .put("appsystem", "ruizhiSystem")
                     .put("IPMac", "117.24.114.16"+random.nextInt(9)+"//18F46AB7B768");
 
-            _source.put("timestamp","2018-01-31T23:57:23.000+08:00")
+            /*_source.put("timestamp","2018-01-31T23:57:23.000+08:00")
                     .put("source","D:\\tdx\\tdxtc50_7708\\log\\Trade_20180201.log")
                     .put("indexTime","2018-01-31T23:57:38.978+08:00")
                     .put("normalFields",normalFields)
                     .put("logTypeName","ruizhi_log_logstash")
                     .put("dimensions",dimensions)
                     .put("measures",measures)
-                    .put("offset", random.nextInt(10));
+                    .put("offset", random.nextInt(10));*/
+
+
 
             JSONArray indexTime = new JSONArray();
             indexTime.put(1517414258978L);
@@ -87,14 +90,23 @@ public class RuizhiSimulationData {
                     .put("normalFields.logchecktime", normalFieldsLogchecktime)
                     .put("timestamp", timestamp);
 
-            event.put("_index", "ruizhilog_2018.01.31")
+            /*event.put("_index", "ruizhilog_2018.01.31")
                     .put("_type", "ruizhi_log_logstash")
                     .put("_id", "AWFM8o7ZOxRgjvauYrzA")
                     .put("_version", 1)
                     .put("_score", "null")
                     .put("sort", 1517414243000L)
                     .put("fields", fields)
-                    .put("_source", _source);
+                    .put("_source", _source);*/
+
+            event.put("timestamp",new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()) + ".000+08:00")
+                    .put("source","D:\\tdx\\tdxtc50_7708\\log\\Trade_20180201.log")
+                    .put("indexTime","2018-01-31T23:57:38.978+08:00")
+                    .put("normalFields",normalFields)
+                    .put("logTypeName","ruizhi_log_logstash")
+                    .put("dimensions",dimensions)
+                    .put("measures",measures)
+                    .put("offset", random.nextInt(10));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -106,8 +118,8 @@ public class RuizhiSimulationData {
 
         try {
             while (true) {
-                client.sendRecorder("test1", "key", message());
-                Thread.sleep(1000);
+                client.sendRecorder("test", "key", message());
+                Thread.sleep(50);
             }
         } catch (Exception e) {
             e.printStackTrace();
